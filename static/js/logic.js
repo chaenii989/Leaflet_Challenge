@@ -1,7 +1,7 @@
 // Create map
 var myMap = L.map("map", {
     center: [40.76, -10.89],
-    zoom: 2
+    zoom: 3
     });
 
 L.tileLayer(
@@ -18,33 +18,56 @@ L.tileLayer(
 
 var link = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
-var myStyle = 
 
 d3.json(link).then(function(data){
     L.geoJson(data, {
         pointToLayer: function (feature, latlng) {
         return L.circleMarker(latlng,{
             color: 'black',
-            radius: feature.properties.mag * 2,
+            radius: feature.properties.mag * 3,
             fillColor : getColor(latlng.alt),
             fillOpacity : 0.85,
+            stroke: true,
             weight: 1.0
         }).bindPopup(function (data) {
-            return `${feature.properties.place}<br>Magnitude: ${feature.properties.mag}`;
+            return `Location:${feature.properties.place}<br>Magnitude: ${feature.properties.mag}`;
         })
     }}).addTo(myMap);
 });
 
+
+// Create getColor function
 function getColor(depth) {
     switch (true) {
         case depth>90:
             return 'red';
-    
-        case depth>60:
+        case depth>70:
+            return 'orange';
+        case depth>50:
             return 'yellow';
-    
-        case depth<61:
+        case depth>30:
+            return 'lightyellow';
+        case depth>10:
+            return 'lightgreen';
+        case depth<11:
             return 'green';
     }
 }
-        
+     
+// Create legend
+var legend = L.control({
+    position: "bottomright"
+});
+
+legend.onAdd = function(myMap){
+    var div = L.DomUtil.create("div", "info legend"),
+    grades = [-10,10,30,50,70,90],
+    labels = [];
+
+    for (var i=0; i<grades.length; i++){
+        div.innerHTML +=
+        '<i style="background:' + getColor(grades[i]+1) +'"></i> ' + grades[i] + (grades[i+1] ? '&ndash;' + grades[i+1] + '<br>': '+');
+    }
+    return div;
+};
+legend.addTo(myMap);
